@@ -2,7 +2,7 @@ import uuid
 from datetime import date, datetime
 from decimal import Decimal
 
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator
 from sqlmodel import Field, Relationship, SQLModel
 
 
@@ -162,3 +162,101 @@ class TimeEntry(SQLModel, table=True):
     hours: Decimal = Field(decimal_places=2, max_digits=6)
     entry_date: date = Field(index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+# ---------------------------------------------------------------------------
+# WorkLog Payment Domain — Pydantic response/request schemas
+# ---------------------------------------------------------------------------
+
+
+class FreelancerPublic(SQLModel):
+    id: uuid.UUID
+    name: str
+    email: str
+    hourly_rate: Decimal
+
+
+class TaskPublic(SQLModel):
+    id: uuid.UUID
+    title: str
+    description: str | None
+
+
+class TimeEntryPublic(SQLModel):
+    id: uuid.UUID
+    worklog_id: uuid.UUID
+    description: str
+    hours: Decimal
+    entry_date: date
+    created_at: datetime
+
+
+class WorkLogPublic(SQLModel):
+    id: uuid.UUID
+    task_id: uuid.UUID
+    freelancer_id: uuid.UUID
+    status: str
+    payment_id: uuid.UUID | None
+    created_at: datetime
+    total_hrs: Decimal = Decimal("0")
+    earned_amt: Decimal = Decimal("0")
+
+
+class WorkLogDetail(WorkLogPublic):
+    task: TaskPublic
+    freelancer: FreelancerPublic
+    entries: list[TimeEntryPublic]
+
+
+class WorkLogsPublic(SQLModel):
+    data: list[WorkLogPublic]
+    count: int
+
+
+class PaymentCreate(SQLModel):
+    date_from: date
+    date_to: date
+    excluded_worklog_ids: list[uuid.UUID] = []
+
+    @field_validator("date_from")
+    @classmethod
+    def v_date_from(cls, v: date) -> date:
+        """date_from must be a valid calendar date."""
+        return v
+
+    @field_validator("date_to")
+    @classmethod
+    def v_date_to(cls, v: date) -> date:
+        """date_to must be a valid calendar date; range checked at endpoint level."""
+        return v
+
+    @field_validator("excluded_worklog_ids")
+    @classmethod
+    def v_excl(cls, v: list[uuid.UUID]) -> list[uuid.UUID]:
+        """Deduplicate excluded worklog IDs."""
+        return list(dict.fromkeys(v))
+
+
+class PaymentPublic(SQLModel):
+    id: uuid.UUID
+    date_from: date
+    date_to: date
+    total_amt: Decimal
+    status: str
+    created_at: datetime
+
+
+class PaymentDetail(PaymentPublic):
+    worklogs: list[WorkLogPublic]
+
+
+class PaymentsPublic(SQLModel):
+    data: list[PaymentPublic]
+    count: int
+
+
+class PaymentPreview(SQLModel):
+    date_from: date
+    date_to: date
+    total_amt: Decimal
+    worklogs: list[WorkLogPublic]
