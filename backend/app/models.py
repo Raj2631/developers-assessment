@@ -200,6 +200,8 @@ class WorkLogPublic(SQLModel):
     created_at: datetime
     total_hrs: Decimal = Decimal("0")
     earned_amt: Decimal = Decimal("0")
+    task_title: str = ""
+    freelancer_name: str = ""
 
 
 class WorkLogDetail(WorkLogPublic):

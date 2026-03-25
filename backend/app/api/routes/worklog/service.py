@@ -165,8 +165,9 @@ class WorkLogService:
 
     @staticmethod
     def _build_wl_public(session: Session, wl: WorkLog) -> WorkLogPublic:
-        """Compute total_hrs and earned_amt for a single WorkLog row."""
+        """Compute total_hrs, earned_amt, task_title and freelancer_name for a WorkLog row."""
         fl = session.get(Freelancer, wl.freelancer_id)
+        task = session.get(Task, wl.task_id)
         tes = session.exec(
             select(TimeEntry).where(TimeEntry.worklog_id == wl.id)
         ).all()
@@ -181,6 +182,8 @@ class WorkLogService:
             created_at=wl.created_at,
             total_hrs=total_hrs,
             earned_amt=earned_amt,
+            task_title=task.title if task else "",  # type: ignore[union-attr]
+            freelancer_name=fl.name if fl else "",  # type: ignore[union-attr]
         )
 
     @staticmethod
