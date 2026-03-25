@@ -103,6 +103,6 @@ def init_db(session: Session) -> None:
         session.commit()
         session.refresh(wl)
         for desc, hrs, entry_date in entries:
-            te = TimeEntry(worklog_id=wl.id, description=desc, hours=hrs, date=entry_date)
+            te = TimeEntry(worklog_id=wl.id, description=desc, hours=hrs, entry_date=entry_date)
             session.add(te)
             session.commit()

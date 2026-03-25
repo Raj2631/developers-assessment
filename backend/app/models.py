@@ -160,5 +160,5 @@ class TimeEntry(SQLModel, table=True):
     worklog_id: uuid.UUID = Field(foreign_key="worklog.id", index=True)
     description: str = Field(max_length=1000)
     hours: Decimal = Field(decimal_places=2, max_digits=6)
-    date: date = Field(index=True)
+    entry_date: date = Field(index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)

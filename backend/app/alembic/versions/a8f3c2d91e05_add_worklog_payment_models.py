@@ -73,18 +73,18 @@ def upgrade():
         sa.Column('worklog_id', sa.UUID(), nullable=False),
         sa.Column('description', sqlmodel.sql.sqltypes.AutoString(length=1000), nullable=False),
         sa.Column('hours', sa.Numeric(precision=6, scale=2), nullable=False),
-        sa.Column('date', sa.Date(), nullable=False),
+        sa.Column('entry_date', sa.Date(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.ForeignKeyConstraint(['worklog_id'], ['worklog.id']),
         sa.PrimaryKeyConstraint('id'),
     )
-    op.create_index('ix_time_entry_date', 'time_entry', ['date'], unique=False)
+    op.create_index('ix_time_entry_entry_date', 'time_entry', ['entry_date'], unique=False)
     op.create_index('ix_time_entry_worklog_id', 'time_entry', ['worklog_id'], unique=False)
 
 
 def downgrade():
     op.drop_index('ix_time_entry_worklog_id', table_name='time_entry')
-    op.drop_index('ix_time_entry_date', table_name='time_entry')
+    op.drop_index('ix_time_entry_entry_date', table_name='time_entry')
     op.drop_table('time_entry')
 
     op.drop_index('ix_worklog_status', table_name='worklog')
