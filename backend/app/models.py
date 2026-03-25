@@ -1,4 +1,6 @@
 import uuid
+from datetime import date, datetime
+from decimal import Decimal
 
 from pydantic import EmailStr
 from sqlmodel import Field, Relationship, SQLModel
@@ -111,3 +113,52 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=128)
+
+
+# ---------------------------------------------------------------------------
+# WorkLog Payment Domain — DB table models
+# ---------------------------------------------------------------------------
+
+
+class Freelancer(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    name: str = Field(index=True, max_length=255)
+    email: str = Field(unique=True, index=True, max_length=255)
+    hourly_rate: Decimal = Field(decimal_places=2, max_digits=10)
+
+
+class Task(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    title: str = Field(index=True, max_length=255)
+    description: str | None = Field(default=None, max_length=1000)
+
+
+class Payment(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    date_from: date
+    date_to: date
+    total_amt: Decimal = Field(decimal_places=2, max_digits=12)
+    status: str = Field(default="confirmed", max_length=50)
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+
+class WorkLog(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    task_id: uuid.UUID = Field(foreign_key="task.id")
+    freelancer_id: uuid.UUID = Field(foreign_key="freelancer.id")
+    status: str = Field(default="pending", index=True, max_length=50)
+    payment_id: uuid.UUID | None = Field(
+        default=None, foreign_key="payment.id", nullable=True, index=True
+    )
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+
+
+class TimeEntry(SQLModel, table=True):
+    __tablename__ = "time_entry"  # type: ignore[assignment]
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    worklog_id: uuid.UUID = Field(foreign_key="worklog.id", index=True)
+    description: str = Field(max_length=1000)
+    hours: Decimal = Field(decimal_places=2, max_digits=6)
+    date: date = Field(index=True)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
