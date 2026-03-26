@@ -33,26 +33,37 @@ const STEPS = [
   { key: "confirmed", label: "Confirmed" },
 ] as const
 
-function StepIndicator({ current }: { current: Step }) {
+const STEP_ORDER: Step[] = ["form", "preview", "confirmed"]
+
+function StepIndicator({ current, onStepClick }: { current: Step; onStepClick: (s: Step) => void }) {
+  const currentIdx = STEP_ORDER.indexOf(current)
   return (
     <div className="flex items-center gap-2 mb-6">
-      {STEPS.map((s, i) => (
-        <div key={s.key} className="flex items-center gap-2">
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              s.key === current
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground"
-            }`}
-          >
-            <span>{i + 1}</span>
-            <span>{s.label}</span>
+      {STEPS.map((s, i) => {
+        const isPast = i < currentIdx
+        const isCurrent = s.key === current
+        return (
+          <div key={s.key} className="flex items-center gap-2">
+            <button
+              onClick={() => isPast && onStepClick(s.key as Step)}
+              disabled={!isPast}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                isCurrent
+                  ? "bg-primary text-primary-foreground"
+                  : isPast
+                  ? "bg-muted text-foreground hover:bg-muted/80 cursor-pointer"
+                  : "bg-muted text-muted-foreground cursor-default"
+              }`}
+            >
+              <span>{i + 1}</span>
+              <span>{s.label}</span>
+            </button>
+            {i < STEPS.length - 1 && (
+              <span className="text-muted-foreground">──</span>
+            )}
           </div>
-          {i < STEPS.length - 1 && (
-            <span className="text-muted-foreground">──</span>
-          )}
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -270,7 +281,7 @@ function Payments() {
       </div>
 
       {/* Step indicator */}
-      <StepIndicator current={step} />
+      <StepIndicator current={step} onStepClick={setStep} />
 
       {/* Error */}
       {error && (
@@ -318,14 +329,7 @@ function Payments() {
       {/* Step 2 — Review & exclude */}
       {step === "preview" && preview && (
         <div className="flex flex-col gap-4">
-          <button
-            onClick={() => setStep("form")}
-            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 w-fit cursor-pointer"
-          >
-            ← Back to Step 1
-          </button>
-
-          {/* Summary bar */}
+            {/* Summary bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 p-4 border rounded-lg bg-card">
             <span className="text-sm text-muted-foreground">
               <span className="font-semibold text-foreground">{selectedWorklogs.length}</span> worklog
