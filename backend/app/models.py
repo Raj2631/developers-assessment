@@ -202,6 +202,8 @@ class WorkLogPublic(SQLModel):
     earned_amt: Decimal = Decimal("0")
     task_title: str = ""
     freelancer_name: str = ""
+    entry_date_from: date | None = None
+    entry_date_to: date | None = None
 
 
 class WorkLogDetail(WorkLogPublic):

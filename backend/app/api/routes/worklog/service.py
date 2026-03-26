@@ -173,6 +173,7 @@ class WorkLogService:
         ).all()
         total_hrs = sum((te.hours for te in tes), Decimal("0"))
         earned_amt = total_hrs * fl.hourly_rate  # type: ignore[union-attr]
+        entry_dates = sorted(te.entry_date for te in tes)
         return WorkLogPublic(
             id=wl.id,
             task_id=wl.task_id,
@@ -184,6 +185,8 @@ class WorkLogService:
             earned_amt=earned_amt,
             task_title=task.title if task else "",  # type: ignore[union-attr]
             freelancer_name=fl.name if fl else "",  # type: ignore[union-attr]
+            entry_date_from=entry_dates[0] if entry_dates else None,
+            entry_date_to=entry_dates[-1] if entry_dates else None,
         )
 
     @staticmethod
